@@ -153,21 +153,36 @@ Fields alone are enough.
 
 The solver 2 uses 'pkas' to solve problems : 
 
-🧠 The PCL-Solver Update
-The field has evolved from a pure visualization into a neuromorphic constraint-satisfaction engine. It now implements
-a Phase-Calcium-Latent (PCL) transduction loop:
+🧠 The PCL-Engine V4:
 
-Phase Layer (Search): High-frequency oscillators (Gamma/Beta) explore the solution space through competitive interference.
+Certified Heuristic SATThe Romanesco Field has evolved into a functional 
+Phase-Calcium-Latent (PCL) solver—a neuromorphic constraint-satisfaction engine that replaces
+traditional tree-search with physical relaxation.
 
-Calcium Layer (Transduction): Acts as a temporal integrator and "credit assignment" gate, filtering noise to promote 
-coherent state transitions.
+The Transduction LoopPhase Layer (Stochastic Search):
 
-Latent Field (Resonance): The global "Romanesco" architecture provides the coordination signal, allowing the system
-to physically relax into a stable, "solved" geometry without backtracking.
+Variables are represented as oscillators in a continuous phase-space ($x_i \approx \cos(\phi_i)$).
+Unsatisfied clauses apply a literal torque (torque-drive), pushing variables toward their satisfying 
+orientation.
 
-"Unlike traditional SAT solvers that use branch-and-bound search, this engine treats logical constraints as high-energy
-stress in a fluid field. It uses Calcium Gating to 'freeze' successful configurations into a resonant manifold,
-effectively solving problems through structural morphogenesis."
+Calcium Layer (Temporal Integration):
+
+Acts as a "credit assignment" gate. It filters
+high-frequency noise and accumulates during periods of local coherence, effectively "freezing"
+successful sub-configurations into a stable manifold.
+
+Latent Field (Resonant Coordination): 
+
+The multi-scale "Romanesco" architecture provides an ephaptic coordination signal, allowing the 
+system to coordinate global variable assignments through wave interference.
+
+Technical Specification
+
+"Unlike traditional CDCL (Conflict-Driven Clause Learning) solvers that use branch-and-bound search,
+this engine treats 3-SAT constraints as high-energy stress in a fluid field. It utilizes a 
+Stochastic Local Search (SLS) heuristic within a continuous embedding, using thermal restarts 
+to escape local minima. Convergence is finalized by a deterministic NP-verifier, ensuring that
+'Certified Resonance' is a mathematical guarantee of a valid truth assignment."
 
 
 ## License

@@ -151,6 +151,25 @@ Fields alone are enough.
 
 ---
 
+The solver 2 uses 'pkas' to solve problems : 
+
+🧠 The PCL-Solver Update
+The field has evolved from a pure visualization into a neuromorphic constraint-satisfaction engine. It now implements
+a Phase-Calcium-Latent (PCL) transduction loop:
+
+Phase Layer (Search): High-frequency oscillators (Gamma/Beta) explore the solution space through competitive interference.
+
+Calcium Layer (Transduction): Acts as a temporal integrator and "credit assignment" gate, filtering noise to promote 
+coherent state transitions.
+
+Latent Field (Resonance): The global "Romanesco" architecture provides the coordination signal, allowing the system
+to physically relax into a stable, "solved" geometry without backtracking.
+
+"Unlike traditional SAT solvers that use branch-and-bound search, this engine treats logical constraints as high-energy
+stress in a fluid field. It uses Calcium Gating to 'freeze' successful configurations into a resonant manifold,
+effectively solving problems through structural morphogenesis."
+
+
 ## License
 
 Do whatever you want with it.

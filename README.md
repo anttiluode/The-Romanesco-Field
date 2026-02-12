@@ -1,5 +1,7 @@
 # Romanesco Consciousness Field
 
+👉 **Live Demo:** https://anttiluode.github.io/The-Romanesco-Field/
+
 This project is a **single-page WebGL visualization** that renders animated, organic, fractal-like graphics inspired by brain waves, phase coupling, and nested oscillations — visually similar to Romanesco broccoli patterns.
 
 It runs entirely in the browser using **HTML + JavaScript + a GPU fragment shader**.

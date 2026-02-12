@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Romanesco Consciousness Field</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Crimson+Pro:ital,wght@0,300;1,300&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #04040a;
+    color: #c8c8d0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  #container {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    grid-template-rows: 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+  
+  #canvas-wrap {
+    position: relative;
+    overflow: hidden;
+    background: #000;
+  }
+  
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  
+  #overlay {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  #overlay h1 {
+    font-family: 'Crimson Pro', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 22px;
+    color: rgba(255, 220, 180, 0.7);
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(255, 150, 50, 0.3);
+    margin-bottom: 2px;
+  }
+  
+  #overlay .sub {
+    font-size: 9px;
+    color: rgba(180, 180, 200, 0.4);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  
+  #fps {
+    position: absolute;
+    bottom: 8px;
+    left: 14px;
+    font-size: 10px;
+    color: rgba(100, 255, 150, 0.5);
+    pointer-events: none;
+  }
+  
+  #panel {
+    background: rgba(8, 8, 18, 0.95);
+    border-left: 1px solid rgba(60, 60, 80, 0.3);
+    padding: 16px 14px;
+    overflow-y: auto;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .section-title {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 180, 100, 0.6);
+    border-bottom: 1px solid rgba(255, 180, 100, 0.15);
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+  }
+  
+  .param-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 3px 0;
+  }
+  
+  .param-row label {
+    font-size: 10px;
+    color: rgba(180, 180, 200, 0.7);
+    min-width: 70px;
+  }
+  
+  .param-row input[type="range"] {
+    flex: 1;
+    height: 3px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(80, 80, 120, 0.3);
+    border-radius: 2px;
+    outline: none;
+  }
+  
+  .param-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 180, 100, 0.8);
+    cursor: pointer;
+  }
+  
+  .param-row .val {
+    font-size: 9px;
+    color: rgba(150, 150, 180, 0.5);
+    min-width: 32px;
+    text-align: right;
+  }
+  
+  .band-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0;
+  }
+  
+  .band-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .band-name {
+    font-size: 9px;
+    color: rgba(180, 180, 200, 0.6);
+    flex: 1;
+  }
+  
+  .band-value {
+    font-size: 9px;
+    color: rgba(150, 150, 180, 0.4);
+  }
+  
+  #mode-buttons {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  
+  #mode-buttons button {
+    flex: 1;
+    min-width: 60px;
+    padding: 5px 4px;
+    border: 1px solid rgba(80, 80, 120, 0.3);
+    background: rgba(20, 20, 40, 0.6);
+    color: rgba(180, 180, 200, 0.7);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  
+  #mode-buttons button:hover {
+    background: rgba(40, 40, 70, 0.8);
+    border-color: rgba(255, 180, 100, 0.4);
+  }
+  
+  #mode-buttons button.active {
+    background: rgba(255, 180, 100, 0.15);
+    border-color: rgba(255, 180, 100, 0.5);
+    color: rgba(255, 200, 140, 0.9);
+  }
+  
+  #metrics {
+    font-size: 9px;
+    color: rgba(150, 150, 180, 0.5);
+    line-height: 1.6;
+  }
+  
+  #metrics .metric-val {
+    color: rgba(200, 200, 220, 0.8);
+    font-weight: 700;
+  }
+
+  .equation {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: rgba(200, 180, 160, 0.5);
+    text-align: center;
+    padding: 6px 0;
+    border: 1px solid rgba(80, 80, 120, 0.15);
+    border-radius: 3px;
+    background: rgba(20, 20, 35, 0.4);
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="canvas-wrap">
+    <canvas id="gl"></canvas>
+    <div id="overlay">
+      <h1>Romanesco Consciousness</h1>
+      <div class="sub">Multi-scale eigenmode field dynamics</div>
+    </div>
+    <div id="fps">-- fps</div>
+  </div>
+  
+  <div id="panel">
+    <div class="equation">Φ(x,t) = Σ<sub>k</sub> A<sub>k</sub>(Φ<sub>k-1</sub>) · ψ<sub>k</sub>(r) · e<sup>iω<sub>k</sub>t</sup></div>
+    
+    <div class="section-title">Visualization Mode</div>
+    <div id="mode-buttons">
+      <button class="active" data-mode="0">Composite</button>
+      <button data-mode="1">Delta</button>
+      <button data-mode="2">Theta</button>
+      <button data-mode="3">Alpha</button>
+      <button data-mode="4">Beta</button>
+      <button data-mode="5">Gamma</button>
+      <button data-mode="6">Moiré</button>
+      <button data-mode="7">Phase</button>
+      <button data-mode="8">Coupling</button>
+    </div>
+    
+    <div class="section-title">Band Amplitudes</div>
+    <div class="band-indicator"><div class="band-dot" style="background:#4466ff"></div><span class="band-name">δ Delta 1-4 Hz</span><span class="band-value" id="bv0">1.0</span></div>
+    <div class="param-row"><input type="range" min="0" max="200" value="100" id="amp0"><span class="val" id="av0">1.0</span></div>
+    
+    <div class="band-indicator"><div class="band-dot" style="background:#44ccaa"></div><span class="band-name">θ Theta 4-8 Hz</span><span class="band-value" id="bv1">0.8</span></div>
+    <div class="param-row"><input type="range" min="0" max="200" value="80" id="amp1"><span class="val" id="av1">0.8</span></div>
+    
+    <div class="band-indicator"><div class="band-dot" style="background:#cccc44"></div><span class="band-name">α Alpha 8-13 Hz</span><span class="band-value" id="bv2">0.6</span></div>
+    <div class="param-row"><input type="range" min="0" max="200" value="60" id="amp2"><span class="val" id="av2">0.6</span></div>
+    
+    <div class="band-indicator"><div class="band-dot" style="background:#ff8844"></div><span class="band-name">β Beta 13-30 Hz</span><span class="band-value" id="bv3">0.4</span></div>
+    <div class="param-row"><input type="range" min="0" max="200" value="40" id="amp3"><span class="val" id="av3">0.4</span></div>
+    
+    <div class="band-indicator"><div class="band-dot" style="background:#ff4466"></div><span class="band-name">γ Gamma 30-80 Hz</span><span class="band-value" id="bv4">0.25</span></div>
+    <div class="param-row"><input type="range" min="0" max="200" value="25" id="amp4"><span class="val" id="av4">0.25</span></div>
+    
+    <div class="section-title">Coupling & Dynamics</div>
+    <div class="param-row"><label>PAC strength</label><input type="range" min="0" max="200" value="80" id="coupling"><span class="val" id="cv">0.8</span></div>
+    <div class="param-row"><label>Spatial scale</label><input type="range" min="10" max="200" value="60" id="scale"><span class="val" id="sv">0.6</span></div>
+    <div class="param-row"><label>Time speed</label><input type="range" min="5" max="300" value="100" id="speed"><span class="val" id="spv">1.0</span></div>
+    <div class="param-row"><label>Nonlinearity</label><input type="range" min="0" max="200" value="50" id="nonlin"><span class="val" id="nlv">0.5</span></div>
+    <div class="param-row"><label>Moiré zoom</label><input type="range" min="10" max="300" value="100" id="moire_zoom"><span class="val" id="mzv">1.0</span></div>
+    
+    <div class="section-title">Field Metrics</div>
+    <div id="metrics">
+      Moiré stress: <span class="metric-val" id="m_stress">--</span><br>
+      Phase coherence: <span class="metric-val" id="m_coher">--</span><br>
+      Max |λ| band: <span class="metric-val" id="m_dom">--</span><br>
+      Complexity: <span class="metric-val" id="m_complex">--</span><br>
+      Entropy est.: <span class="metric-val" id="m_entropy">--</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gl');
+const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+
+if (!gl) { document.body.innerHTML = '<h1 style="color:red;padding:40px">WebGL not supported</h1>'; }
+
+// === SHADER SOURCE ===
+const vertSrc = `
+  attribute vec2 pos;
+  varying vec2 uv;
+  void main() {
+    uv = pos * 0.5 + 0.5;
+    gl_Position = vec4(pos, 0.0, 1.0);
+  }
+`;
+
+// The core field equation as a fragment shader
+// This runs per-pixel at 60fps on GPU
+const fragSrc = `
+  precision highp float;
+  varying vec2 uv;
+  
+  uniform float time;
+  uniform float amp[5];      // Band amplitudes
+  uniform float coupling;    // Phase-amplitude coupling strength  
+  uniform float spatialScale; // Base spatial scale
+  uniform float nonlinearity; // Sigmoid steepness
+  uniform float moireZoom;   // Moiré pattern zoom
+  uniform int mode;          // Visualization mode
+  
+  // Band frequencies (Hz, scaled for visual speed)
+  #define FREQ0 2.0
+  #define FREQ1 6.0
+  #define FREQ2 10.5
+  #define FREQ3 22.0
+  #define FREQ4 55.0
+  
+  // Spatial wavelengths (inversely proportional to frequency)
+  #define SK0 1.0
+  #define SK1 2.5
+  #define SK2 5.0
+  #define SK3 12.0
+  #define SK4 30.0
+  
+  // Band colors
+  #define COL0 vec3(0.27, 0.40, 1.00)
+  #define COL1 vec3(0.27, 0.80, 0.67)
+  #define COL2 vec3(0.80, 0.80, 0.27)
+  #define COL3 vec3(1.00, 0.53, 0.27)
+  #define COL4 vec3(1.00, 0.27, 0.40)
+  
+  // Sigmoid for nonlinear gene-like activation
+  float sigmoid(float x, float k) {
+    return 1.0 / (1.0 + exp(-k * x));
+  }
+  
+  // Radial eigenmode: Bessel-like function (concentric rings)
+  // This is the spatial structure of each band
+  float eigenmode(float r, float k, float phase) {
+    return cos(k * r + phase) * exp(-r * r * 0.15);
+  }
+  
+  // Phase-amplitude coupling: slow phase modulates fast amplitude
+  // This IS the romanesco nesting
+  float pac(float slow_phase, float fast_amp, float strength) {
+    // When slow wave is at positive phase, fast wave gets amplified
+    return fast_amp * (1.0 + strength * sin(slow_phase));
+  }
+  
+  void main() {
+    // Center coordinates, aspect-corrected
+    vec2 p = (uv - 0.5) * 2.0 * spatialScale;
+    float r = length(p);
+    float theta = atan(p.y, p.x);
+    
+    // === COMPUTE ALL 5 BANDS ===
+    float b0, b1, b2, b3, b4;
+    float p0, p1, p2, p3, p4;
+    
+    // Band 0: Delta (slowest, largest spatial extent)
+    p0 = FREQ0 * time;
+    b0 = amp[0] * eigenmode(r, SK0 * moireZoom, p0);
+    b0 += amp[0] * 0.3 * cos(SK0 * r - FREQ0 * time + theta * 1.0) 
+                * exp(-r * r * 0.1);
+    
+    // Band 1: Theta — modulated by Delta phase (PAC)
+    p1 = FREQ1 * time;
+    float theta_raw = eigenmode(r, SK1 * moireZoom, p1);
+    theta_raw += 0.4 * cos(SK1 * r + theta * 2.0 - FREQ1 * time * 0.7) 
+                 * exp(-r * r * 0.12);
+    b1 = pac(p0, amp[1] * theta_raw, coupling);
+    
+    // Band 2: Alpha — modulated by Theta, the "carrier" rhythm
+    p2 = FREQ2 * time;
+    float alpha_raw = eigenmode(r, SK2 * moireZoom, p2);
+    alpha_raw += 0.5 * cos(SK2 * r - FREQ2 * time + theta * 3.0) 
+                 * exp(-r * r * 0.08);
+    alpha_raw += 0.3 * cos(SK2 * 0.7 * r) * cos(FREQ2 * time * 0.5);
+    b2 = pac(p1, amp[2] * alpha_raw, coupling);
+    
+    // Band 3: Beta — modulated by Alpha
+    p3 = FREQ3 * time;
+    float beta_raw = eigenmode(r, SK3 * moireZoom, p3);
+    beta_raw += 0.4 * cos(SK3 * r + theta * 5.0 - FREQ3 * time) 
+                * exp(-r * r * 0.06);
+    beta_raw = sigmoid(beta_raw * 2.0, nonlinearity * 4.0 + 1.0) * 2.0 - 1.0;
+    b3 = pac(p2, amp[3] * beta_raw, coupling);
+    
+    // Band 4: Gamma — modulated by Beta, highest frequency, most local
+    p4 = FREQ4 * time;
+    float gamma_raw = eigenmode(r, SK4 * moireZoom, p4);
+    gamma_raw += 0.6 * cos(SK4 * r + theta * 8.0 - FREQ4 * time * 1.3) 
+                 * exp(-r * r * 0.04);
+    gamma_raw = sigmoid(gamma_raw * 3.0, nonlinearity * 8.0 + 1.0) * 2.0 - 1.0;
+    b4 = pac(p3, amp[4] * gamma_raw, coupling * 1.3);
+    
+    // === MOIRÉ STRESS ===
+    float moire = 0.0;
+    moire += abs(b0 * b1);
+    moire += abs(b1 * b2);
+    moire += abs(b2 * b3);
+    moire += abs(b3 * b4);
+    moire *= 0.5;
+    
+    // === PHASE COHERENCE ===
+    float coherence = 0.0;
+    coherence += cos(p0 - p1) * 0.25;
+    coherence += cos(p1 - p2) * 0.25;
+    coherence += cos(p2 - p3) * 0.25;
+    coherence += cos(p3 - p4) * 0.25;
+    
+    // === OUTPUT COLOR ===
+    vec3 color = vec3(0.0);
+    
+    if (mode == 0) {
+      // COMPOSITE: RGB = slow/medium/fast (romanesco encoding)
+      float slow = (b0 + b1) * 0.5;
+      float mid = b2;
+      float fast = (b3 + b4) * 0.5;
+      
+      color.r = 0.5 + 0.5 * slow;
+      color.g = 0.5 + 0.5 * mid;
+      color.b = 0.5 + 0.5 * fast;
+      
+      float energy = b0*b0 + b1*b1 + b2*b2 + b3*b3 + b4*b4;
+      energy = sqrt(energy * 0.2);
+      
+      float glow = exp(-r * r * 0.5) * 0.3;
+      color += vec3(glow * 1.2, glow * 0.8, glow * 0.4);
+      color *= (0.6 + 0.4 * energy);
+      color.r += moire * 0.15;
+      
+    } else if (mode == 1) {
+      float v = b0;
+      color = v > 0.0 ? COL0 * v : vec3(0.15, 0.12, 0.20) * (-v);
+      color += vec3(0.03) * exp(-r * r * 0.3);
+    } else if (mode == 2) {
+      float v = b1;
+      color = v > 0.0 ? COL1 * v : vec3(0.15, 0.12, 0.20) * (-v);
+      color += vec3(0.03) * exp(-r * r * 0.3);
+    } else if (mode == 3) {
+      float v = b2;
+      color = v > 0.0 ? COL2 * v : vec3(0.15, 0.12, 0.20) * (-v);
+      color += vec3(0.03) * exp(-r * r * 0.3);
+    } else if (mode == 4) {
+      float v = b3;
+      color = v > 0.0 ? COL3 * v : vec3(0.15, 0.12, 0.20) * (-v);
+      color += vec3(0.03) * exp(-r * r * 0.3);
+    } else if (mode == 5) {
+      float v = b4;
+      color = v > 0.0 ? COL4 * v : vec3(0.15, 0.12, 0.20) * (-v);
+      color += vec3(0.03) * exp(-r * r * 0.3);
+      
+    } else if (mode == 6) {
+      // MOIRÉ VIEW
+      float m01 = b0 * b1;
+      float m12 = b1 * b2;
+      float m23 = b2 * b3;
+      float m34 = b3 * b4;
+      
+      color.r = abs(m23) + abs(m34) * 0.5;
+      color.g = abs(m12) * 1.2;
+      color.b = abs(m01) * 1.5;
+      color *= (1.0 + moire * 2.0);
+      
+    } else if (mode == 7) {
+      // PHASE VIEW
+      float ph01 = cos(p0 - p1);
+      float ph12 = cos(p1 - p2);
+      float ph23 = cos(p2 - p3);
+      float ph34 = cos(p3 - p4);
+      
+      color.r = 0.5 + 0.5 * ph23;
+      color.g = 0.5 + 0.5 * ph12;
+      color.b = 0.5 + 0.5 * ph01;
+      
+      float e = b0*b0 + b1*b1 + b2*b2 + b3*b3 + b4*b4;
+      color *= sqrt(e * 0.15) + 0.2;
+      
+    } else if (mode == 8) {
+      // COUPLING VIEW
+      float pac01 = abs(sin(p0)) * abs(b1);
+      float pac12 = abs(sin(p1)) * abs(b2);
+      float pac23 = abs(sin(p2)) * abs(b3);
+      float pac34 = abs(sin(p3)) * abs(b4);
+      
+      color = vec3(pac34, pac23, pac12) * 2.0;
+      color += vec3(0.02, 0.01, 0.03) * exp(-r * r * 0.2);
+    }
+    
+    // Vignette
+    float vig = 1.0 - smoothstep(0.3, 1.5, r / spatialScale);
+    color *= vig * 0.9 + 0.1;
+    
+    // Tone mapping
+    color = color / (color + 0.8);
+    color = pow(color, vec3(0.85));
+    
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+// === WEBGL SETUP ===
+function createShader(gl, type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(s));
+    return null;
+  }
+  return s;
+}
+
+function createProgram(gl, vs, fs) {
+  const p = gl.createProgram();
+  gl.attachShader(p, vs);
+  gl.attachShader(p, fs);
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(p));
+    return null;
+  }
+  return p;
+}
+
+const vs = createShader(gl, gl.VERTEX_SHADER, vertSrc);
+const fs = createShader(gl, gl.FRAGMENT_SHADER, fragSrc);
+const program = createProgram(gl, vs, fs);
+
+const posBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+const posLoc = gl.getAttribLocation(program, 'pos');
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+gl.useProgram(program);
+
+// Uniform locations
+const uTime = gl.getUniformLocation(program, 'time');
+const uAmp = [];
+for (let i = 0; i < 5; i++) uAmp.push(gl.getUniformLocation(program, `amp[${i}]`));
+const uCoupling = gl.getUniformLocation(program, 'coupling');
+const uScale = gl.getUniformLocation(program, 'spatialScale');
+const uNonlin = gl.getUniformLocation(program, 'nonlinearity');
+const uMoireZoom = gl.getUniformLocation(program, 'moireZoom');
+const uMode = gl.getUniformLocation(program, 'mode');
+
+// === STATE ===
+let currentMode = 0;
+let params = {
+  amp: [1.0, 0.8, 0.6, 0.4, 0.25],
+  coupling: 0.8,
+  scale: 0.6,
+  speed: 1.0,
+  nonlin: 0.5,
+  moireZoom: 1.0,
+};
+
+// === CONTROLS ===
+const sliders = {};
+for (let i = 0; i < 5; i++) {
+  const el = document.getElementById(`amp${i}`);
+  const vEl = document.getElementById(`av${i}`);
+  sliders[`amp${i}`] = { el, vEl, param: () => params.amp[i], set: v => params.amp[i] = v };
+  el.addEventListener('input', () => {
+    const v = el.value / 100;
+    params.amp[i] = v;
+    vEl.textContent = v.toFixed(2);
+    document.getElementById(`bv${i}`).textContent = v.toFixed(2);
+  });
+}
+
+[['coupling', 'cv', 'coupling'], ['scale', 'sv', 'scale'], 
+ ['speed', 'spv', 'speed'], ['nonlin', 'nlv', 'nonlin'],
+ ['moire_zoom', 'mzv', 'moireZoom']].forEach(([id, vid, key]) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const v = el.value / 100;
+    params[key] = v;
+    document.getElementById(vid).textContent = v.toFixed(2);
+  });
+});
+
+// Mode buttons
+document.querySelectorAll('#mode-buttons button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mode-buttons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = parseInt(btn.dataset.mode);
+  });
+});
+
+// === RENDER LOOP ===
+let startTime = performance.now();
+let frameCount = 0;
+let lastFpsTime = startTime;
+
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  canvas.width = wrap.clientWidth * window.devicePixelRatio;
+  canvas.height = wrap.clientHeight * window.devicePixelRatio;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+window.addEventListener('resize', resize);
+resize();
+
+function render() {
+  const now = performance.now();
+  const t = (now - startTime) * 0.001 * params.speed;
+  
+  // FPS counter
+  frameCount++;
+  if (now - lastFpsTime > 500) {
+    const fps = frameCount / ((now - lastFpsTime) * 0.001);
+    document.getElementById('fps').textContent = `${fps.toFixed(0)} fps | ${canvas.width}×${canvas.height}`;
+    frameCount = 0;
+    lastFpsTime = now;
+    
+    // Update metrics (rough estimates computed on CPU side)
+    const bandNames = ['δ Delta', 'θ Theta', 'α Alpha', 'β Beta', 'γ Gamma'];
+    const maxAmpIdx = params.amp.indexOf(Math.max(...params.amp));
+    document.getElementById('m_dom').textContent = bandNames[maxAmpIdx];
+    
+    const totalAmp = params.amp.reduce((a, b) => a + b, 0);
+    const moire = params.amp.reduce((acc, a, i) => i < 4 ? acc + a * params.amp[i+1] : acc, 0);
+    document.getElementById('m_stress').textContent = (moire * params.moireZoom).toFixed(3);
+    document.getElementById('m_coher').textContent = (params.coupling * 0.8).toFixed(3);
+    
+    // Complexity: product of active bands × coupling
+    const activeBands = params.amp.filter(a => a > 0.1).length;
+    const complexity = activeBands * params.coupling * (1 + params.nonlin);
+    document.getElementById('m_complex').textContent = complexity.toFixed(2);
+    
+    // Entropy estimate: how evenly distributed are the amplitudes?
+    const probs = params.amp.map(a => a / totalAmp);
+    const entropy = -probs.reduce((s, p) => p > 0 ? s + p * Math.log(p) : s, 0);
+    document.getElementById('m_entropy').textContent = entropy.toFixed(3);
+  }
+  
+  // Set uniforms
+  gl.uniform1f(uTime, t);
+  for (let i = 0; i < 5; i++) gl.uniform1f(uAmp[i], params.amp[i]);
+  gl.uniform1f(uCoupling, params.coupling);
+  gl.uniform1f(uScale, params.scale + 0.2);
+  gl.uniform1f(uNonlin, params.nonlin);
+  gl.uniform1f(uMoireZoom, params.moireZoom);
+  gl.uniform1i(uMode, currentMode);
+  
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  requestAnimationFrame(render);
+}
+
+render();
+</script>
+</body>
+</html>

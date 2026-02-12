@@ -1,191 +1,119 @@
-# Romanesco Consciousness Field
+# The Romanesco Field
 
 👉 **Live Demo:** https://anttiluode.github.io/The-Romanesco-Field/
 
-This project is a **single-page WebGL visualization** that renders animated, organic, fractal-like graphics inspired by brain waves, phase coupling, and nested oscillations — visually similar to Romanesco broccoli patterns.
+This repo contains two separate things that share a canvas but are functionally independent:
 
-It runs entirely in the browser using **HTML + JavaScript + a GPU fragment shader**.
+1. **A multi-scale oscillatory field visualization** (the Romanesco field)
+2. **A heuristic 3-SAT solver** with a WebGL background animation
 
----
-
-## What this is (simple version)
-
-Think of this as:
-
-- A **screensaver-like field**
-- Made of **multiple moving waves**
-- Where **slow waves modulate faster waves**
-- And everything is drawn **pixel-by-pixel on the GPU**
-
-No data is being loaded.  
-No AI is running.  
-Nothing is being “learned”.  
-
-It’s pure math + graphics.
+They were developed in sequence — the field came first, the solver grew out of it through iteration. The connection between them is aesthetic, not computational.
 
 ---
 
-## Core idea
+## Part 1: The Romanesco Field (`index.html`)
 
-The code simulates **five oscillating fields** layered together:
+A GPU fragment shader that renders five coupled oscillatory bands in real time.
 
-| Band | Name  | Rough meaning |
-|----|------|---------------|
-| 0 | Delta | Very slow, large-scale background |
-| 1 | Theta | Medium-slow modulation |
-| 2 | Alpha | Carrier rhythm |
-| 3 | Beta  | Fast detail |
-| 4 | Gamma | Very fast, fine texture |
+Each band has its own frequency and spatial wavelength. Slower bands modulate faster ones through phase-amplitude coupling (PAC) — the same cross-frequency interaction observed in neural oscillations. The result is nested, fractal-like interference patterns that look organic because biology operates under the same scale constraints.
 
-Each band:
-- Has its own **frequency**
-- Has its own **spatial scale**
-- Is shaped as **concentric / spiral eigenmodes**
-- Is **amplitude-modulated by the slower band below it**
+**What's in the shader:**
 
-This nesting is what creates the **Romanesco / fractal feel**.
+- 5 frequency bands (delta through gamma) with Bessel-like radial eigenmodes
+- PAC chain: delta gates theta, theta gates alpha, alpha gates beta, beta gates gamma
+- Sigmoid nonlinearity on fast bands (creates sharp transitions)
+- Moiré stress computed as cross-band interference products
+- 9 visualization modes: composite, per-band isolation, moiré, phase coherence, coupling strength
+
+**What the sliders control:**
+
+- Per-band amplitude
+- PAC coupling strength
+- Spatial scale, time speed, nonlinearity, moiré zoom
+
+**What it is not:** It is not a brain simulator, not EEG analysis, not AI. It is a visualization of known signal processing principles — specifically, what happens when incompatible spatial scales are forced to coexist on a single grid.
 
 ---
 
-## Why the graphics look “alive”
+## Part 2: The SAT Solver (`solver2.html` through `solver7.html`)
 
-Three main reasons:
+A stochastic local search solver for 3-SAT problems, presented with a WebGL spiral animation. You drop a JSON file containing clauses and it attempts to find a satisfying Boolean assignment.
 
-### 1. Phase–Amplitude Coupling (PAC)
+### How it works
 
-Slower waves control how strong faster waves become.
+Each Boolean variable is encoded as a phase angle on a circle. `cos(phase) > 0` means TRUE, `cos(phase) < 0` means FALSE. On each frame:
 
-```text
-slow phase ↑ → fast detail grows
-slow phase ↓ → fast detail fades
+1. Every clause is evaluated against the current phase assignment
+2. Unsatisfied clauses apply torque to a randomly chosen literal, pushing its phase toward a satisfying orientation
+3. Phases are integrated with noise
+4. If stagnation is detected (300 frames without improvement), all phases are randomly perturbed (thermal restart)
+5. When all clauses read as satisfied, a **deterministic Boolean verifier** checks every clause. Only if this passes does it report "CERTIFIED"
+
+This is a variant of [WalkSAT](https://en.wikipedia.org/wiki/WalkSAT) (Selman et al., 1994) with continuous phase variables instead of discrete bit flips, plus random-walk noise and restart-on-stagnation.
+
+### What the verification means
+
+When the solver displays **Verified: YES**, the solution is mathematically correct. The verifier is a standard SAT certificate checker — it evaluates every clause against the final Boolean assignment. This is the textbook reason SAT is in NP: solutions are hard to find but easy to check.
+
+### What it does not mean
+
+- This does not prove P = NP
+- This does not guarantee convergence on hard instances
+- The solver will struggle at the SAT phase transition (~4.27 clauses per variable for random 3-SAT)
+- The WebGL animation is cosmetic — it receives `satisfaction` and `calcium` as uniforms but does not participate in the computation
+
+### Evolution of the solver files
+
+| File | What changed |
+|------|-------------|
+| `solver2.html` | Fake solver. Satisfaction climbs on a timer. No clause evaluation. Pretty animation. |
+| `solver3.html` | Added JSON drop zone. Still fake — satisfaction is a timer, not computed from clauses. |
+| `solver4.html` | Added proof output. **Still fake** — truth values are `Math.random()`, not derived from any computation. |
+| `solver5.html` | **First real solver.** Clauses are evaluated, unsatisfied clauses apply torque, phases are integrated. No verification pass. |
+| `solver6.html` | Added deterministic verification (`verifyAssignment()`). Only reports "CERTIFIED" if the verifier passes. First honest version. |
+| `solver7.html` | Added stagnation detection and automatic thermal restarts. The most complete version. |
+
+### JSON format
+
+```json
+{
+  "n_vars": 20,
+  "clauses": [
+    [1, 2, 3],
+    [-1, -2, -3],
+    [2, 3, 4]
+  ]
+}
 ```
 
-This creates pulsing, breathing structures.
+Positive integers are positive literals, negative integers are negated literals. Each clause is an OR of its literals. The solver tries to make every clause true simultaneously.
+
+### Test problems included
+
+- `problem.json` — 30 variables, 129 clauses (near phase transition ratio)
+- `problem2.json` — 81 variables, 24 clauses (heavily underconstrained, easy)
+- `problem3.json` — 20 variables, 22 clauses (adversarial bottleneck structure)
 
 ---
 
-### 2. Moiré interference
+## Honest assessment
 
-When multiple wave patterns overlap slightly out of sync, they form:
+**The Romanesco field** is a genuinely rich visualization instrument. Five independent bands with real PAC coupling, nine diagnostic views, and full parametric control. It demonstrates how nested oscillations produce emergent structure through interference — the same principle that operates in neural dynamics.
 
-- ripples
-- lattices
-- rotating flower shapes
-- emergent textures
+**The SAT solver** is a working heuristic solver with correct verification. It is not novel — WalkSAT has existed since 1994 and production solvers like MiniSat or CaDiCaL handle millions of variables. The solver works on small, underconstrained instances. It will fail or take a very long time on hard instances at the phase transition.
 
-These are **not drawn explicitly** — they appear naturally from interference.
-
----
-
-### 3. GPU fragment shader
-
-The core math runs **once per pixel, 60 times per second** on your GPU.
-
-That’s why:
-- It’s fast
-- It’s fluid
-- It feels continuous instead of frame-based
-
----
-
-## What the modes do
-
-The buttons on the right change what you’re looking at:
-
-- **Composite** – All bands combined into RGB
-- **Delta → Gamma** – View one band alone
-- **Moiré** – Shows interference stress between bands
-- **Phase** – Shows how synchronized the bands are
-- **Coupling** – Visualizes modulation strength
-
-They’re all the *same field*, just viewed differently.
-
----
-
-## What the sliders do
-
-- **Band amplitudes** – How strong each layer is
-- **PAC strength** – How much slow waves affect fast ones
-- **Spatial scale** – Zoom level of the field
-- **Time speed** – Animation speed
-- **Nonlinearity** – Sharpening / thresholding
-- **Moiré zoom** – How dense interference patterns are
-
-Small changes can cause **qualitative shifts**, which is why it feels unstable or surprising.
-
----
-
-## What this is NOT
-
-- ❌ Not a brain simulator
-- ❌ Not EEG decoding
-- ❌ Not consciousness itself
-- ❌ Not AI
-
-It’s a **visual metaphor** built from known signal principles.
+**The connection between them** is that they share a WebGL canvas. The README previously described a "Phase-Calcium-Latent transduction loop" where the field dynamics participate in the solving. That is not what happens in the code. The shader receives two numbers (`satisfaction` and `globalCa`) and renders a spiral. The solver runs independently in JavaScript. They do not interact.
 
 ---
 
 ## How to run
 
-1. Save the file as `romanesco.html`
-2. Open it in a modern browser (Chrome, Edge, Firefox)
-3. Make sure WebGL is enabled
-4. Move sliders, switch modes, watch it breathe
-
-No server required.
+1. Open any `.html` file in a modern browser (Chrome, Edge, Firefox)
+2. For the solver files, drag and drop a `.json` problem file onto the drop zone
+3. No server required — everything runs client-side
 
 ---
-
-## Why it matters
-
-This kind of code shows how:
-
-- Simple oscillators
-- Coupling rules
-- And spatial structure
-
-Can create **rich, lifelike behavior** without agents, symbols, or learning.
-
-Fields alone are enough.
-
----
-
-The solver 2 uses 'pkas' to solve problems : 
-
-🧠 The PCL-Engine V4:
-
-Certified Heuristic SATThe Romanesco Field has evolved into a functional 
-Phase-Calcium-Latent (PCL) solver—a neuromorphic constraint-satisfaction engine that replaces
-traditional tree-search with physical relaxation.
-
-The Transduction LoopPhase Layer (Stochastic Search):
-
-Variables are represented as oscillators in a continuous phase-space ($x_i \approx \cos(\phi_i)$).
-Unsatisfied clauses apply a literal torque (torque-drive), pushing variables toward their satisfying 
-orientation.
-
-Calcium Layer (Temporal Integration):
-
-Acts as a "credit assignment" gate. It filters
-high-frequency noise and accumulates during periods of local coherence, effectively "freezing"
-successful sub-configurations into a stable manifold.
-
-Latent Field (Resonant Coordination): 
-
-The multi-scale "Romanesco" architecture provides an ephaptic coordination signal, allowing the 
-system to coordinate global variable assignments through wave interference.
-
-Technical Specification
-
-"Unlike traditional CDCL (Conflict-Driven Clause Learning) solvers that use branch-and-bound search,
-this engine treats 3-SAT constraints as high-energy stress in a fluid field. It utilizes a 
-Stochastic Local Search (SLS) heuristic within a continuous embedding, using thermal restarts 
-to escape local minima. Convergence is finalized by a deterministic NP-verifier, ensuring that
-'Certified Resonance' is a mathematical guarantee of a valid truth assignment."
-
 
 ## License
 
 Do whatever you want with it.
-Explore. Break it. Remix it.
